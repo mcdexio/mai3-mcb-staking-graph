@@ -1,0 +1,32 @@
+specVersion: 0.0.1
+schema:
+  file: ./schema.graphql
+dataSources:
+  - kind: ethereum/contract
+    name: MCBStaking
+    network: arbitrum-one
+    source:
+      address: "0xB3500fb8fa94423974A5A6e55c405139c5928E85"
+      abi: MCBStaking
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.5
+      language: wasm/assemblyscript
+      entities:
+        - OwnershipTransferred
+        - Redeem
+        - SetUnlockPeriod
+        - Stake
+      abis:
+        - name: MCBStaking
+          file: ./abis/MCBStaking.json
+      eventHandlers:
+        - event: OwnershipTransferred(indexed address,indexed address)
+          handler: handleOwnershipTransferred
+        - event: Redeem(indexed address,uint256)
+          handler: handleRedeem
+        - event: SetUnlockPeriod(uint256,uint256)
+          handler: handleSetUnlockPeriod
+        - event: Stake(indexed address,uint256,uint256,uint256)
+          handler: handleStake
+      file: ./src/mapping.ts

@@ -1,0 +1,16 @@
+{
+  "name": "mcdex3-arb-mcb-staking",
+  "license": "UNLICENSED",
+  "scripts": {
+    "codegen": "graph codegen",
+    "build": "graph build",
+    "deploy": "graph deploy --node https://api.thegraph.com/deploy/ mcdexio/mcdex3-arb-mcb-staking",
+    "create-local": "graph create --node http://localhost:8020/ mcdexio/mcdex3-arb-mcb-staking",
+    "remove-local": "graph remove --node http://localhost:8020/ mcdexio/mcdex3-arb-mcb-staking",
+    "deploy-local": "graph deploy --node http://localhost:8020/ --ipfs http://localhost:5001 mcdexio/mcdex3-arb-mcb-staking"
+  },
+  "dependencies": {
+    "@graphprotocol/graph-cli": "0.23.0",
+    "@graphprotocol/graph-ts": "0.22.1"
+  }
+}
