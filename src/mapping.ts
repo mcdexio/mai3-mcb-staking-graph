@@ -1,65 +1,49 @@
-import { BigInt } from "@graphprotocol/graph-ts"
 import {
-  MCBStaking,
-  OwnershipTransferred,
-  Redeem,
-  SetUnlockPeriod,
-  Stake
+  Redeem as RedeemEvent,
+  Stake as StakeEvent
 } from "../generated/MCBStaking/MCBStaking"
-import { ExampleEntity } from "../generated/schema"
+import { User } from "../generated/schema"
+import { BigInt, BigDecimal, Address } from '@graphprotocol/graph-ts'
 
-export function handleOwnershipTransferred(event: OwnershipTransferred): void {
-  // Entities can be loaded from the store using a string ID; this ID
-  // needs to be unique across all entities of the same type
-  let entity = ExampleEntity.load(event.transaction.from.toHex())
+export let ZERO_BI = BigInt.fromI32(0)
+export let ONE_BI = BigInt.fromI32(1)
+export let ZERO_BD = BigDecimal.fromString('0')
+export let BI_18 = BigInt.fromI32(18)
 
-  // Entities only exist after they have been saved to the store;
-  // `null` checks allow to create entities on demand
-  if (!entity) {
-    entity = new ExampleEntity(event.transaction.from.toHex())
-
-    // Entity fields can be set using simple assignments
-    entity.count = BigInt.fromI32(0)
+export function exponentToBigDecimal(decimals: BigInt): BigDecimal {
+  let bd = BigDecimal.fromString('1')
+  for (let i = ZERO_BI; i.lt(decimals as BigInt); i = i.plus(ONE_BI)) {
+    bd = bd.times(BigDecimal.fromString('10'))
   }
-
-  // BigInt and BigDecimal math are supported
-  entity.count = entity.count + BigInt.fromI32(1)
-
-  // Entity fields can be set based on event parameters
-  entity.previousOwner = event.params.previousOwner
-  entity.newOwner = event.params.newOwner
-
-  // Entities can be written to the store with `.save()`
-  entity.save()
-
-  // Note: If a handler doesn't require existing field values, it is faster
-  // _not_ to load the entity from the store. Instead, create it fresh with
-  // `new Entity(...)`, set the fields that should be updated and save the
-  // entity back to the store. Fields that were not set or unset remain
-  // unchanged, allowing for partial updates to be applied.
-
-  // It is also possible to access smart contracts from mappings. For
-  // example, the contract that has emitted the event can be connected to
-  // with:
-  //
-  // let contract = Contract.bind(event.address)
-  //
-  // The following functions can then be called on this contract to access
-  // state variables and other data:
-  //
-  // - contract.balanceOf(...)
-  // - contract.calcUnlockTime(...)
-  // - contract.lockPeriod(...)
-  // - contract.name(...)
-  // - contract.owner(...)
-  // - contract.secondsUntilUnlock(...)
-  // - contract.stakeToken(...)
-  // - contract.stakedBalances(...)
-  // - contract.unlockTime(...)
+  return bd
 }
 
-export function handleRedeem(event: Redeem): void {}
+export function convertToDecimal(amount: BigInt, decimals: BigInt): BigDecimal {
+  if (decimals == ZERO_BI) {
+    return amount.toBigDecimal()
+  }
+  return amount.toBigDecimal().div(exponentToBigDecimal(decimals))
+}
 
-export function handleSetUnlockPeriod(event: SetUnlockPeriod): void {}
+export function fetchUser(address: Address): User {
+  let user = User.load(address.toHexString())
+  if (user === null) {
+    user = new User(address.toHexString())
+    user.balance = ZERO_BD
+    user.save()
+  }
+  return user as User
+}
 
-export function handleStake(event: Stake): void {}
+
+export function handleRedeem(event: RedeemEvent): void {
+  let user = fetchUser(event.params.account)
+  user.balance -= convertToDecimal(event.params.redeemed, BI_18)
+  user.save()
+}
+
+export function handleStake(event: StakeEvent): void {
+  let user = fetchUser(event.params.account)
+  user.balance = convertToDecimal(event.params.totalStaked, BI_18)
+  user.save()
+}

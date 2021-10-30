@@ -1,6 +1,6 @@
 {
   "name": "mcdex3-arb-mcb-staking",
-  "license": "UNLICENSED",
+  "license": "MIT",
   "scripts": {
     "codegen": "graph codegen",
     "build": "graph build",
