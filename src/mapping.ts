@@ -2,7 +2,7 @@ import {
   Redeem as RedeemEvent,
   Stake as StakeEvent
 } from "../generated/MCBStaking/MCBStaking"
-import { User } from "../generated/schema"
+import { Account } from "../generated/schema"
 import { BigInt, BigDecimal, Address } from '@graphprotocol/graph-ts'
 
 export let ZERO_BI = BigInt.fromI32(0)
@@ -25,25 +25,25 @@ export function convertToDecimal(amount: BigInt, decimals: BigInt): BigDecimal {
   return amount.toBigDecimal().div(exponentToBigDecimal(decimals))
 }
 
-export function fetchUser(address: Address): User {
-  let user = User.load(address.toHexString())
-  if (user === null) {
-    user = new User(address.toHexString())
-    user.balance = ZERO_BD
-    user.save()
+export function fetchAccount(address: Address): Account {
+  let account = Account.load(address.toHexString())
+  if (account === null) {
+    account = new Account(address.toHexString())
+    account.balance = ZERO_BD
+    account.save()
   }
-  return user as User
+  return account as Account
 }
 
 
 export function handleRedeem(event: RedeemEvent): void {
-  let user = fetchUser(event.params.account)
-  user.balance -= convertToDecimal(event.params.redeemed, BI_18)
-  user.save()
+  let account = fetchAccount(event.params.account)
+  account.balance -= convertToDecimal(event.params.redeemed, BI_18)
+  account.save()
 }
 
 export function handleStake(event: StakeEvent): void {
-  let user = fetchUser(event.params.account)
-  user.balance = convertToDecimal(event.params.totalStaked, BI_18)
-  user.save()
+  let account = fetchAccount(event.params.account)
+  account.balance = convertToDecimal(event.params.totalStaked, BI_18)
+  account.save()
 }
